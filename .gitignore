@@ -1,0 +1,328 @@
+# ============================================
+# .gitignore for AI Lead Scoring n8n Project
+# ============================================
+
+# ==========================================
+# CRITICAL: API Keys & Credentials
+# ==========================================
+# NEVER commit these files!
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+*.env
+
+# n8n credentials
+credentials.json
+*credentials*.json
+
+# API keys
+api_keys.txt
+secrets.txt
+config/secrets.json
+*_api_key.txt
+*_token.txt
+
+# HubSpot
+hubspot_token.txt
+hubspot_api_key.txt
+
+# Bitrix24
+bitrix24_webhook.txt
+bitrix24_token.txt
+
+# Airtable
+airtable_token.txt
+airtable_api_key.txt
+
+# Hunter.io
+hunter_api_key.txt
+
+# BuiltWith
+builtwith_api_key.txt
+
+# Groq / AI
+groq_api_key.txt
+openai_api_key.txt
+anthropic_api_key.txt
+
+# Slack
+slack_webhook.txt
+slack_token.txt
+
+# ==========================================
+# Production Data - NEVER COMMIT!
+# ==========================================
+
+# Real customer data
+data/production/
+data/customers/
+data/leads/
+backups/
+exports/
+
+# CSV files with real data
+*_production.csv
+*_customer_data.csv
+*_real_leads.csv
+Leads-Production*.csv
+Sales_Feedback-Production*.csv
+
+# Database dumps
+*.sql
+*.dump
+*.sqlite
+*.db
+
+# ==========================================
+# n8n Specific
+# ==========================================
+
+# n8n data directory (if running locally)
+.n8n/
+~/.n8n/
+
+# n8n logs
+n8n-log/
+logs/
+*.log
+
+# n8n temporary files
+.n8n-temp/
+temp/
+
+# n8n cache
+.n8n-cache/
+cache/
+
+# Workflow versions (keep only main)
+*_backup_*.json
+*_old_*.json
+*_test_*.json
+workflow_*_version_*.json
+
+# ==========================================
+# Node.js / npm (if using custom nodes)
+# ==========================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==========================================
+# Python (if using helper scripts)
+# ==========================================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Python distribution
+build/
+dist/
+*.egg-info/
+
+# ==========================================
+# IDEs and Editors
+# ==========================================
+
+# Visual Studio Code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs (WebStorm, PyCharm, etc.)
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ==========================================
+# Operating System Files
+# ==========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ==========================================
+# Temporary Files
+# ==========================================
+
+# General temporary
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Test files
+test_data/
+test_results/
+coverage/
+.coverage
+htmlcov/
+
+# Debug files
+debug.log
+error.log
+*.log.*
+
+# ==========================================
+# Documentation Build Files
+# ==========================================
+
+# Sphinx documentation
+docs/_build/
+docs/.doctrees/
+
+# MkDocs
+site/
+
+# ==========================================
+# Version Control
+# ==========================================
+
+# Git
+*.orig
+*.rej
+.git/
+
+# ==========================================
+# Archives & Compressed Files
+# ==========================================
+
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# But allow sample data archives
+!examples/sample-data/*.zip
+
+# ==========================================
+# ALLOW THESE FILES (Exceptions)
+# ==========================================
+
+# Allow sample/example files
+!examples/**/*.csv
+!examples/sample-data/*.json
+!examples/test-contacts.json
+
+# Allow documentation
+!docs/**/*
+!README.md
+!CONTRIBUTING.md
+!LICENSE
+
+# Allow workflow JSON (with no credentials)
+!workflow/*.json
+!"Hybrid Lead Scoring & CRM Integration System.json"
+
+# Allow assets
+!assets/**/*.png
+!assets/**/*.jpg
+!assets/**/*.svg
+
+# Allow GitHub templates
+!.github/**/*
+
+# ==========================================
+# Project Specific - DO NOT COMMIT
+# ==========================================
+
+# Local configuration overrides
+config.local.json
+settings.local.json
+
+# Personal notes
+NOTES.md
+TODO.md
+PERSONAL_*.md
+
+# Development database
+dev.db
+local.db
+
+# Output files from testing
+output/
+results/
+
+# ==========================================
+# IMPORTANT REMINDERS
+# ==========================================
+
+# If you accidentally commit sensitive data:
+# 1. Remove it from Git history: git filter-branch
+# 2. Rotate ALL API keys immediately
+# 3. Update all credentials
+# 4. Force push: git push --force
+
+# Best practices:
+# - Never commit real API keys
+# - Never commit customer data
+# - Use environment variables
+# - Use .env files (and add to .gitignore)
+# - Review changes before committing
+# - Use pre-commit hooks
+
+# ==========================================
+# END OF .gitignore
+# ==========================================

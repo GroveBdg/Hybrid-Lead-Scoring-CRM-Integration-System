@@ -1,0 +1,2 @@
+﻿Deal_ID,Contact_ID,Task_ID,Lead_Name,Company,Lead_Score,Lead_Score_Manual,Lead_Score_AI,Predicted_Outcome,Hunter_Status,Deal_Created_At,Review_Date,Actual_Outcome,Feedback_Type,Workflow_Run_ID
+143,629302934742,408577792219,Adam Nowak,Atos,71.0,80.0,65.0,HOT,accept_all,7.1.2026,6.2.2026,,Pending,3249

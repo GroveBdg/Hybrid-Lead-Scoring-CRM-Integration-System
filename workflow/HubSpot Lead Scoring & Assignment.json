@@ -1,0 +1,3057 @@
+{
+  "name": "HubSpot Lead Scoring & Assignment",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a274bc5-431e-4fc6-b27c-c4f9761ba8ba",
+              "leftValue": "={{ $('Merge Contact & Enrichment Data').item.json.lead_score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        64,
+        144
+      ],
+      "id": "121b5626-8f11-4d6c-9bdc-fc1b1170eefd",
+      "name": "If hot"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9c41a91a-e602-4603-ad96-58018483f29a",
+              "leftValue": "={{ $('Merge Contact & Enrichment Data').item.json.lead_score }}",
+              "rightValue": 40,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "a8c385dd-d883-422f-a32c-b41e973b1da3",
+              "leftValue": "={{ $('Merge Contact & Enrichment Data').item.json.lead_score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        192
+      ],
+      "id": "622f707e-6d65-4565-808a-9b7e92a43372",
+      "name": "If warm"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('HubSpot Trigger').item.json.contactId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -80,
+        144
+      ],
+      "id": "c99976fd-fe78-4123-96ce-1f55191a9036",
+      "name": "Saving scoring in HubSpot",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "q6tiEm69cZk9KO1J",
+          "name": "Mistral"
+        },
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A50979BL4",
+          "mode": "list",
+          "cachedResultName": "all-n8n"
+        },
+        "text": "=*New Lead {{ $json.lead_type === 'HOT' ? 'HOT' : '⚡ WARM' }}*\n\n*Customer Data:*\n*First and Last Name:* {{ $('Merge Contact & Enrichment Data').item.json.firstname }}{{ $('Merge Contact & Enrichment Data').item.json.lastname }}\n*Position at work:* {{ $('Merge Contact & Enrichment Data').item.json.jobtitle }}\n*Email:* {{ $('Merge Contact & Enrichment Data').item.json.email }}\n*Phone:* {{ $('Merge Contact & Enrichment Data').item.json.phone }}\n\n*Scoring:*\n*Result and justification:* {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties }}\n\n*Customer Service Representative:*\nAssigned to: {{ $json.owner_id === '86239643' ? 'Sebastian' : 'Jan' }}\n\n---\nCheck out the details at HubSpot: https://app-eu1.hubspot.com/contacts/147430855/record/0-1/{{ $('Merge Contact & Enrichment Data').item.json.id }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        272,
+        128
+      ],
+      "id": "461a8cc3-ecbd-42fc-8ae6-a992dec74409",
+      "name": "Send a message",
+      "webhookId": "b05bc1d2-58c0-49a7-a423-7ea84b5615eb",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "DwlRsxJtinca4DMD",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "search",
+        "filterGroupsUi": {
+          "filterGroupsValues": [
+            {
+              "filtersUi": {
+                "filterValues": [
+                  {
+                    "propertyName": "email|string",
+                    "value": "={{ $json.email }}"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "082b12f1-a67c-4b35-b1a8-a13baf17c565",
+      "name": "Search contacts",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Download search results\nconst searchResults = $('Search contacts').all();\nconst existing = searchResults.length > 0 ? searchResults[0].json : null;\n\n// 2. Get data from Normalize (always available)\nconst normalizedData = $('Parse Contact Properties').first().json;\n\n// 3. Download Tech Stack data (securely)\n// Search for the node under two names, because you probably changed the name\nlet techData = { tech_score: 0, tech_profile: null, tech_groups: null };\n\ntry {\n// Try to find data from node \"Analyze Tech Stack & Score\" (Your new name)\nlet techNode = $('Calculate Tech Stack Score');\n\n// If not found, we search by old name\nif (!techNode || techNode.all().length === 0) {\ntechNode = $('Calculate Tech Stack Score');\n}\n\n// If we found data, we assign it\nif (techNode && techNode.all().length > 0) {\nconst techJson = techNode.first().json;\nif (techJson) {\ntechData = {\ntech_score: techJson.tech_score || 0,\ntech_profile: techJson.tech_profile || null,\ntech_groups: techJson.tech_groups || null\n};\n}\n}\n} catch (e) {\n// Ignore errors if the node was not executed (e.g. no domain)\n}\n\n// 4. return the merged object\nreturn {\n// ID: use existing if duplicate\nid: existing ? (existing.id || existing.properties?.hs_object_id) : normalizedData.id,\nisDuplicate: !!existing,\n\n// Contact details\nemail: normalizedData.email,\nfirstname: normalizedData.firstname,\nlastname: normalizedData.lastname,\ncompany: normalizedData.company,\njobtitle: normalizedData.jobtitle,\nphone: normalizedData.phone,\n\n// TECH STACK DATA (Passing it on!)\ntech_score: techData.tech_score,\ntech_profile: techData.tech_profile,\ntech_groups: techData.tech_groups,\n\n// Properties HubSpot\nproperties: normalizedData.properties\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -64
+      ],
+      "id": "8257db49-7260-4bcc-937a-224da36f4b47",
+      "name": "Check for Duplicate Contact"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "companyName": "={{ $json.company }}",
+          "firstName": "={{ $json.firstname }}",
+          "jobTitle": "={{ $json.jobtitle }}",
+          "lastName": "={{ $json.lastname }}",
+          "phoneNumber": "={{ $json.phone }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "c511ee29-6e4e-4023-bab8-17e4551df0d1",
+      "name": "Create or update a contact",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a3e0e12f-e891-4216-b53d-7ae578084d02",
+              "leftValue": "={{ $json.can_lookup_tech }}",
+              "rightValue": "=true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        -336
+      ],
+      "id": "d1b3ada5-7d18-48ad-a4c4-6c797e9b5f43",
+      "name": "If can_lookup_tech"
+    },
+    {
+      "parameters": {
+        "url": "https://api.builtwith.com/free1/api.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "LOOKUP",
+              "value": "={{ $('Extract Domain from Email').item.json.domain }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        96,
+        -352
+      ],
+      "id": "570eef3d-cd0c-4354-b6fb-a52b751a4d2d",
+      "name": "BuiltWith API",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "q6tiEm69cZk9KO1J",
+          "name": "Mistral"
+        },
+        "httpQueryAuth": {
+          "id": "HYVllQU5WpBjY9Jr",
+          "name": "Query Auth api.builtwith.com"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "emailFinder",
+        "domain": "={{ $json.properties.hs_email_domain.value }}",
+        "firstname": "={{ $json.firstname }}",
+        "lastname": "={{ $json.lastname }}"
+      },
+      "type": "n8n-nodes-base.hunter",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -496
+      ],
+      "id": "e8faba7b-cd18-4968-b657-fddc2fdc6f28",
+      "name": "Hunter Email Finder",
+      "credentials": {
+        "hunterApi": {
+          "id": "RsXqUnCvEBjBPqqU",
+          "name": "Hunter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "emailVerifier",
+        "email": "={{ $json.email }}"
+      },
+      "type": "n8n-nodes-base.hunter",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -496
+      ],
+      "id": "26712b65-e2c9-43e6-88e5-4ed62d2faa59",
+      "name": "Hunter Email Verifier",
+      "credentials": {
+        "hunterApi": {
+          "id": "RsXqUnCvEBjBPqqU",
+          "name": "Hunter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Context\nYou are a B2B lead qualification expert. Analyze leads based on:\n- Decision-making authority (job title)\n- Company tech maturity (stack sophistication)\n- Email deliverability (verification status)\n- Company legitimacy (domain age, tech diversity)\n\n# Lead Data\n**Contact:** {{ $('Extract Domain from Email').item.json.firstname }} {{ $('Extract Domain from Email').item.json.lastname }}\n**Job Title:** {{ $('Extract Domain from Email').item.json.jobtitle }}\n**Company:** {{ $('Hunter Email Finder').item.json.company }}\n**Email:** {{ $('Hunter Email Finder').item.json.email }}\n**Email Domain:** {{ $('Hunter Email Finder').item.json.domain }}\n**Email Verification:**\n- Status: {{ $('Hunter Email Verifier').item.json.status }}\n- Confidence Score: {{ $('Hunter Email Verifier').item.json.score }}/100\n- Risk Level: {{ $('Hunter Email Verifier').item.json.result }}\n- SMTP Verified: {{ $('Hunter Email Verifier').item.json.smtp_check }}\n- MX Records: {{ $('Hunter Email Verifier').item.json.mx_records }}\n\n**Tech Stack Summary:**\n- Domain: {{ $('Extract Domain from Email').item.json.properties.hs_email_domain.value }}\n- Total Active Technologies: {{ $('Calculate Tech Stack Score').item.json.tech_score }} active\n- Tech Profile: {{ $('Calculate Tech Stack Score').item.json.tech_profile }}\n- Tech Groups Found: {{ $('Calculate Tech Stack Score').item.json.tech_groups_count }}\n- Key Categories: {{ $('Calculate Tech Stack Score').item.json.tech_groups }}\n\n# Scoring Criteria\n- **70-100 (HOT):** C-level/VP + verified email + enterprise tech stack\n- **40-69 (WARM):** Manager or good tech stack or verified email or accept_all status\n- **0-39 (COLD):** Junior role + unverified email + basic tech\n\n# Task\nRate this lead's conversion probability (0-100) and provide actionable insights.\n\n# Output Format (JSON only, no markdown)\n{\n  \"ai_score\": 75,\n  \"reasoning\": \"Brief explanation of score\",\n  \"red_flags\": [\"List concerning signals\"],\n  \"opportunities\": [\"List positive signals\"],\n  \"recommended_action\": \"Next best action for sales team\"\n}\n\n# CRITICAL OUTPUT INSTRUCTIONS\n\nYou MUST return ONLY the raw JSON object below.\nDo NOT wrap it in markdown code blocks.\nDo NOT include ```json or ``` or any other formatting.\nReturn EXACTLY this structure with your values:\n\n{\"ai_score\":75,\"reasoning\":\"your text\",\"red_flags\":[\"item\"],\"opportunities\":[\"item\"],\"recommended_action\":\"your text\"}\n\nStart your response with { and end with }",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        640,
+        -352
+      ],
+      "id": "dc4bf641-3610-4998-8b12-866c01f1c103",
+      "name": "AI Lead Scoring"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Parse AI Response\nconst input = $input.first().json;\n\n// 1. EXTRACT TEXT - with better type detection\nlet rawText = '';\nlet alreadyParsed = false;\n\nif (Array.isArray(input)) {\n  // Format: [{ text: \"...\" }] or [{ ai_score: 75, ... }]\n  const firstItem = input[0];\n  \n  if (firstItem?.text) {\n    rawText = firstItem.text;\n  } else if (firstItem?.output) {\n    rawText = firstItem.output;\n  } else if (firstItem?.ai_score !== undefined) {\n    // Already parsed JSON!\n    alreadyParsed = true;\n    return { json: firstItem };\n  } else {\n    rawText = JSON.stringify(firstItem);\n  }\n} else if (typeof input === 'string') {\n  // Format: \"{ ai_score: 75 }\"\n  rawText = input;\n} else if (input?.text && typeof input.text === 'string') {\n  // Format: { text: \"...\" }\n  rawText = input.text;\n} else if (input?.output && typeof input.output === 'string') {\n  // Format: { output: \"...\" }\n  rawText = input.output;\n} else if (input?.ai_score !== undefined) {\n  // Already parsed JSON!\n  alreadyParsed = true;\n  return { json: input };\n} else {\n  // Fallback - try stringify\n  rawText = JSON.stringify(input);\n}\n\n// 2. CHECK IF IT'S A STRING\nif (typeof rawText !== 'string') {\n  // If it's still not a string, try stringify\n  rawText = JSON.stringify(rawText);\n}\n\n// 3. CLEAN MARKDOWN (now there's definitely a string)\nconst cleaned = rawText\n  .replace(/```json\\n?/gi, '')\n  .replace(/```\\n?/g, '')\n  .replace(/^[\\s\\n]+|[\\s\\n]+$/g, '')\n  .trim();\n\n// 4. PARSE JSON\nlet aiResponse;\nlet parseError = null;\n\ntry {\n  aiResponse = JSON.parse(cleaned);\n} catch (error) {\n  parseError = error;\n  \n  aiResponse = {\n    ai_score: 50,\n    reasoning: 'AI response parsing failed - manual review needed',\n    red_flags: ['Failed to parse AI response'],\n    opportunities: [],\n    recommended_action: 'Manual review required',\n    _parse_error: error instanceof Error ? error.message : String(error),\n    _raw_response: cleaned.substring(0, 500),\n    _input_type: typeof input,\n    _input_was_array: Array.isArray(input)\n  };\n  \n  return { json: aiResponse };\n}\n\n// 5. VALIDATE\nif (typeof aiResponse.ai_score !== 'number' || \n    aiResponse.ai_score < 0 || \n    aiResponse.ai_score > 100) {\n  aiResponse.ai_score = Math.max(0, Math.min(100, aiResponse.ai_score || 30));\n}\n\naiResponse.red_flags = Array.isArray(aiResponse.red_flags) \n  ? aiResponse.red_flags \n  : [];\naiResponse.opportunities = Array.isArray(aiResponse.opportunities) \n  ? aiResponse.opportunities \n  : [];\n\naiResponse.reasoning = aiResponse.reasoning || 'No reasoning provided';\naiResponse.recommended_action = aiResponse.recommended_action || 'Follow standard process';\n\n// 6. METADATA\naiResponse.parsed_successfully = parseError === null;\naiResponse.parsed_at = new Date().toISOString();\n\nreturn {\n  json: aiResponse\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -64
+      ],
+      "id": "3b4fd277-ead3-416a-ac44-334b8268b109",
+      "name": "Parse AI Response"
+    },
+    {
+      "parameters": {
+        "url": "https://api.hubapi.com/crm/v3/owners/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -240,
+        144
+      ],
+      "id": "4d95bcd6-2745-4e86-b333-154214b5189a",
+      "name": "Get HubSpot Owners",
+      "retryOnFail": true,
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1c8cf31f-ee21-4e1f-88a3-67132346c510",
+              "leftValue": "={{ $json.isDuplicate }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -64
+      ],
+      "id": "49adda40-fef4-48dd-b090-260545d4c81c",
+      "name": "Check If is Duplicate"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appZWls67J4Z9TzWp",
+          "mode": "list",
+          "cachedResultName": "HubSpot Leads - poprawione przez Claude 1",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblevqSAtvUrFmqPv",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp/tblevqSAtvUrFmqPv"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead_Score": "={{ $json.lead_score }}",
+            "Owner_ID": "={{ $json.owner_id }}",
+            "Contact_ID": "={{ $json.id }}",
+            "Email": "={{ $json.email }}",
+            "First_Name": "={{ $json.firstname }}",
+            "Last_Name": "={{ $json.lastname }}",
+            "Phone": "={{ $json.phone }}",
+            "Job_Title": "={{ $json.jobtitle }}",
+            "Source": "={{ $json.source }}",
+            "Status": "={{ $json.status }}",
+            "Hunter_Status": "={{ $json.hubspot_payload.properties.hunter_status }}",
+            "Scoring_Reasons": "={{ $json.lead_score_reasons }}",
+            "Lifecycle_Stage": "={{ $json.lifecyclestage }}",
+            "Lead_Type": "={{ $json.lead_type }}",
+            "Workflow_Run_ID": "={{ $json.workflow_run_id }}",
+            "Company": "={{ $json.company }}"
+          },
+          "matchingColumns": [
+            "Contact_ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Contact_ID",
+              "displayName": "Contact_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "First_Name",
+              "displayName": "First_Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last_Name",
+              "displayName": "Last_Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Job_Title",
+              "displayName": "Job_Title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead_Score",
+              "displayName": "Lead_Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead_Type",
+              "displayName": "Lead_Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "WARM",
+                  "value": "WARM"
+                },
+                {
+                  "name": "HOT",
+                  "value": "HOT"
+                },
+                {
+                  "name": "COLD",
+                  "value": "COLD"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lifecycle_Stage",
+              "displayName": "Lifecycle_Stage",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "marketingqualifiedlead",
+                  "value": "marketingqualifiedlead"
+                },
+                {
+                  "name": "salesqualifiedlead",
+                  "value": "salesqualifiedlead"
+                },
+                {
+                  "name": "lead",
+                  "value": "lead"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Owner_ID",
+              "displayName": "Owner_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Scoring_Reasons",
+              "displayName": "Scoring_Reasons",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Hunter_Status",
+              "displayName": "Hunter_Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "accept_all",
+                  "value": "accept_all"
+                },
+                {
+                  "name": "valid",
+                  "value": "valid"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Contacted",
+                  "value": "Contacted"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Website",
+                  "value": "Website"
+                },
+                {
+                  "name": "Form",
+                  "value": "Form"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Owners",
+              "displayName": "Owners",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Full_Name",
+              "displayName": "Full_Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Created_At",
+              "displayName": "Created_At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last_Updated",
+              "displayName": "Last_Updated",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Workflow_Run_ID",
+              "displayName": "Workflow_Run_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Scoring_History",
+              "displayName": "Scoring_History",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Conversions",
+              "displayName": "Conversions",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        976,
+        -64
+      ],
+      "id": "39512462-8c59-4b5b-ba6b-7c6a99216cff",
+      "name": "Airtable - Log Lead",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "g4MDpX8gsgbI0n0A",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from Merge Data\nconst leadData = $('Merge Contact & Enrichment Data').first().json;\n\n// Get Record ID from Airtable - Log Lead (previous node)\nconst airtableResult = $('Airtable - Log Lead').first().json;\nconst leadRecordId = airtableResult.id;  // This is rec...\n\nreturn {\n  lead_contact_id: leadData.id,\n  score: leadData.lead_score,\n  lead_type: leadData.lead_type,\n  reasons: leadData.lead_score_reasons,\n  source: 'Initial',\n  workflow_id: $execution.id,\n  lead_record_id: leadRecordId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -64
+      ],
+      "id": "39f924a1-0eb5-4831-b367-e85e7aca512f",
+      "name": "Prepare Scoring History"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appZWls67J4Z9TzWp",
+          "mode": "list",
+          "cachedResultName": "HubSpot Leads - poprawione przez Claude 1",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblGbainL7ki3dm7m",
+          "mode": "list",
+          "cachedResultName": "Scoring_History",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp/tblGbainL7ki3dm7m"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead_Contact_ID": "={{ $json.lead_contact_id }}",
+            "Score": "={{ $json.score }}",
+            "Lead_Type": "={{ $json.lead_type }}",
+            "Reasons": "={{ $json.reasons }}",
+            "Source": "={{ $json.source }}",
+            "Lead": "={{ [$json.lead_record_id] }}",
+            "Workflow_ID": "={{ $json.workflow_id }}"
+          },
+          "matchingColumns": [
+            "Lead_Contact_ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Lead_Contact_ID",
+              "displayName": "Lead_Contact_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead_Type",
+              "displayName": "Lead_Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "WARM",
+                  "value": "WARM"
+                },
+                {
+                  "name": "HOT",
+                  "value": "HOT"
+                },
+                {
+                  "name": "COLD",
+                  "value": "COLD"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Reasons",
+              "displayName": "Reasons",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Initial",
+                  "value": "Initial"
+                },
+                {
+                  "name": "Rescore",
+                  "value": "Rescore"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead",
+              "displayName": "Lead",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Workflow_ID",
+              "displayName": "Workflow_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1376,
+        -64
+      ],
+      "id": "d83461ac-430d-4103-a44c-25e3d12a3a6f",
+      "name": "Airtable - Log Scoring History",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "g4MDpX8gsgbI0n0A",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * Clean emoji & prepare Bitrix24-safe fields\n * Converts data from Merge Data to Bitrix24-compatible format\n */\n\n// Helper function to remove emoji\nfunction stripEmoji(str) {\n  if (!str) return '';\n  return str.replace(/[\\u{1F600}-\\u{1F64F}]/gu, '')\n    .replace(/[\\u{1F300}-\\u{1F5FF}]/gu, '')\n    .replace(/[\\u{1F680}-\\u{1F6FF}]/gu, '')\n    .replace(/[\\u{1F1E0}-\\u{1F1FF}]/gu, '')\n    .replace(/[\\u{2600}-\\u{26FF}]/gu, '')\n    .replace(/[\\u{2700}-\\u{27BF}]/gu, '')\n    .replace(/[\\u{FE00}-\\u{FE0F}]/gu, '')\n    .replace(/[\\u{1F900}-\\u{1F9FF}]/gu, '')\n    .replace(/[\\u{1FA70}-\\u{1FAFF}]/gu, '')\n    .trim();\n}\n\n// ===== GET DATA FROM MERGE DATA =====\nconst leadData = $('Merge Contact & Enrichment Data').first().json;\n\nconsole.log('=== CLEAN EMOJI START ===');\nconsole.log('Lead ID:', leadData.id);\nconsole.log('Lead Type:', leadData.lead_type);\nconsole.log('Lead Score:', leadData.lead_score);\n\n// Clean reasons (remove emoji)\nconst reasonsClean = stripEmoji(leadData.lead_score_reasons || '');\n\n// ===== STATUS_ID MAPPING =====\nlet bitrix_status_id = 'NEW';\nif (leadData.lead_type === 'HOT') {\n  bitrix_status_id = 'IN_PROCESS';\n} else if (leadData.lead_type === 'WARM') {\n  bitrix_status_id = 'NEW';\n} else {\n  bitrix_status_id = 'NEW';\n}\n\n// ===== CREATE BITRIX24 COMMENTS =====\nconst bitrix_comments = \n  `Lead score: ${leadData.lead_score || 'N/A'} | ` +\n  `Owner: ${leadData.owner_id || 'N/A'} | ` +\n  `Type: ${leadData.lead_type || 'N/A'} | ` +\n  `Stage: ${leadData.lifecyclestage || 'N/A'} | ` +\n  `Reasons: ${reasonsClean}`;\n\nconsole.log('Comments:', bitrix_comments);\n\n// ===== RETURN CLEANED DATA =====\nreturn {\n  // Contact info\n  firstname: leadData.firstname || '',\n  lastname: leadData.lastname || '',\n  email: leadData.email || '',\n  phone: leadData.phone || '',\n  jobtitle: leadData.jobtitle || '',\n  \n  // Scoring\n  lead_type: leadData.lead_type || 'COLD',\n  lead_score: leadData.lead_score || 0,\n  lifecyclestage: leadData.lifecyclestage || 'lead',\n  \n  // Company\n  company: leadData.company || '',\n  \n  // Bitrix24 specific\n  assigned_owner: leadData.owner_id || '1',\n  bitrix_comments: bitrix_comments,\n  bitrix_source_id: 'WEB',\n  bitrix_status_id: bitrix_status_id,\n  lead_id: ''\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        -320
+      ],
+      "id": "c71eac6b-3775-4d3c-81f4-0cfb9fab540f",
+      "name": "Clean emoji & prepare Bitrix24-safe fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-v153h3.bitrix24.pl/rest/1/ulsbgmkoa85kmaml/crm.lead.list.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"SELECT\": [\"ID\", \"EMAIL\", \"TITLE\", \"NAME\", \"LAST_NAME\"],\n  \"FILTER\": {\n    \"=EMAIL\": \"{{ $('Merge Contact & Enrichment Data').item.json.email }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        944,
+        -464
+      ],
+      "id": "2114c9c7-ceff-407e-aa78-3232917f79a1",
+      "name": "bitrix24 CHECK (crm.lead.list)",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-v153h3.bitrix24.pl/rest/1/ulsbgmkoa85kmaml/crm.lead.update.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $('Filter Valid Leads').item.json.result[0].ID }}\",\n  \"fields\": {\n    \"COMMENTS\": \"{{ $json.bitrix_comments }}\",\n    \"ASSIGNED_BY_ID\": \"{{ $json.assigned_owner }}\",\n    \"STATUS_ID\": \"{{ $json.bitrix_status_id }}\",\n    \"SOURCE_ID\": \"{{ $json.bitrix_source_id }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1840,
+        -320
+      ],
+      "id": "8d687142-2845-4ee3-bcd3-cbf2076bae36",
+      "name": "bitrix24.pl CRM Update",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7bff9219-878d-4222-91d8-5f01a0639856",
+              "leftValue": "={{ $('Merge Contact & Enrichment Data').item.json.lead_type }}",
+              "rightValue": "HOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        -480
+      ],
+      "id": "a1862c72-2218-4d30-886b-95d55edafe73",
+      "name": "IF HOT LEAD"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-v153h3.bitrix24.pl/rest/1/ulsbgmkoa85kmaml/crm.deal.add.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"HOT Deal: {{ $json.firstname }} {{ $json.lastname }} - {{ $json.company }}\",\n    \"TYPE_ID\": \"GOODS\",\n    \"STAGE_ID\": \"NEW\",\n    \"OPENED\": \"Y\",\n    \"CURRENCY_ID\": \"PLN\",\n    \"OPPORTUNITY\": 0,\n    \"ASSIGNED_BY_ID\": \"{{ $json.assigned_owner }}\",\n    \"COMMENTS\": \"{{ $json.bitrix_comments }}\",\n    \"LEAD_ID\": \"{{ $json.lead_id }}\",\n    \"UF_CRM_1767658456\": {{ $json.lead_id }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2448,
+        -512
+      ],
+      "id": "7b4a6e04-fda6-4496-b0b3-7a781600ef8b",
+      "name": "bitrix24.pl CRM Deal Add",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "deal",
+        "stage": "appointmentscheduled",
+        "additionalFields": {
+          "associatedVids": "={{ $('Merge Contact & Enrichment Data').item.json.id }}",
+          "closeDate": "={{ new Date(Date.now() + 14*24*60*60*1000).toISOString().split('T')[0] }}",
+          "description": "==== LEAD SCORING DATA ===\nScore: {{ $('Merge Contact & Enrichment Data').item.json.lead_score }} (Manual: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_manual }}, AI: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_ai }})\nPredicted: {{ $('Merge Contact & Enrichment Data').item.json.lead_type }}\nHunter Status: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.hunter_status }}\nCompany: {{ $('Merge Contact & Enrichment Data').item.json.company }}\nTitle: {{ $('Merge Contact & Enrichment Data').item.json.jobtitle }}\nCreated: {{ $('Merge Contact & Enrichment Data').item.json.scored_at }}\nWorkflow: {{ $('Merge Contact & Enrichment Data').item.json.workflow_run_id }}\n\n=== AI RECOMMENDATION ===\n{{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.ai_recommended_action }}",
+          "dealName": "={{ $('Merge Contact & Enrichment Data').item.json.firstname }}{{ $('Merge Contact & Enrichment Data').item.json.lastname }} – Inbound Lead ({{ $('Merge Contact & Enrichment Data').item.json.lead_type }})",
+          "dealOwner": {
+            "__rl": true,
+            "value": "={{ $('Merge Contact & Enrichment Data').item.json.owner_id }}",
+            "mode": "id"
+          },
+          "dealType": "newbusiness",
+          "pipeline": "default"
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        320
+      ],
+      "id": "d91ff9db-307d-43e7-9b39-196141e262be",
+      "name": "Create a deal",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Prepare Sales Feedback Record\n * MUST run AFTER Merge node!\n * \n * Collects:\n * - Deal_ID from Bitrix24\n * - Task_ID from HubSpot Tasks\n * - Lead data from Merge Data\n */\n\nconst leadData = $('Merge Contact & Enrichment Data').first().json;\n\n// Get data from Airtable (already saved)\nlet airtableSuccess = 'NO';\nlet airtableContactId = leadData.id;\n\nconsole.log('=== PREPARE SALES FEEDBACK START ===');\nconsole.log('Lead ID:', leadData.id);\nconsole.log('Lead Type:', leadData.lead_type);\n\n// ===== GET DEAL_ID ===== (DEFENSIVE VERSION)\nlet dealId = null;\n\nconst dealNodeNames = [\n  'bitrix24.pl CRM Deal Add',\n  'Create a deal',\n  'Create a deal.'\n];\n\nconsole.log('=== SEARCHING FOR DEAL ID ===');\nconsole.log('Node names to search:', dealNodeNames);\n\nfor (const nodeName of dealNodeNames) {\n  try {\n    const dealNode = $(nodeName).first();\n    \n    if (dealNode && dealNode.json) {\n      console.log(`Found node: ${nodeName}`);\n      \n      // Try different fields\n      dealId = dealNode.json.result \n        || dealNode.json.id \n        || dealNode.json.deal_id \n        || dealNode.json.DEAL_ID\n        || dealNode.json.dealId\n        || null;\n      \n      if (dealId) {\n        console.log(`✅ Deal ID found: ${dealId} (from ${nodeName})`);\n        break;\n      } else {\n        console.log(`⚠️ Node ${nodeName} found but no ID`);\n        console.log('Response keys:', Object.keys(dealNode.json));\n        console.log('First 300 chars:', JSON.stringify(dealNode.json).substring(0, 300));\n      }\n    }\n  } catch (e) {\n    console.log(`⏭️ Node ${nodeName} not found or error:`, e.message);\n    continue;\n  }\n}\n\nif (!dealId) {\n  console.log('⚠️ No Deal ID found (OK for WARM/COLD, unexpected for HOT)');\n}\n\n// ===== GET TASK_ID =====\nlet taskId = null;\n\nconst taskNodeNames = [\n  'Create a task HOT',\n  'Create a task WARM',\n  'Create a task COLD'\n];\n\nconsole.log('Searching for Task ID in nodes:', taskNodeNames);\n\nfor (const nodeName of taskNodeNames) {\n  try {\n    const taskNode = $(nodeName).first();\n    \n    if (taskNode && taskNode.json) {\n      // HubSpot returns the task ID in the 'id' field\n      taskId = taskNode.json.id || taskNode.json.engagement?.id || null;\n      \n      if (taskId) {\n        console.log(`✅ Task ID found from ${nodeName}:`, taskId);\n        break; // Found, break loop\n      }\n    }\n  } catch (e) {\n    console.log(`⏭️ ${nodeName} not executed:`, e.message);\n    continue;\n  }\n}\n\nif (!taskId) {\n  console.log('⚠️ WARNING: No Task ID found from any task node');\n}\n\n// ===== DOWNLOAD DATA FROM HUBSPOT PAYLOAD =====\nconst hubspotProps = leadData.hubspot_payload?.properties || {};\n\n// Parse scores (may be strings)\nconst leadScore = parseInt(leadData.lead_score) || 0;\nconst manualScore = parseInt(hubspotProps.lead_score_manual) || 0;\nconst aiScore = parseInt(hubspotProps.lead_score_ai) || 0;\n\n// ===== RETURN FEEDBACK DATA =====\nconst feedbackData = {\n  // IDs\n  deal_id: dealId,\n  contact_id: leadData.id,\n  task_id: taskId,\n  \n  // Lead info\n  lead_name: `${leadData.firstname || ''} ${leadData.lastname || ''}`.trim(),\n  company: leadData.company || 'Unknown',\n  \n  // Scoring breakdown\n  lead_score: leadScore,\n  lead_score_manual: manualScore,\n  lead_score_ai: aiScore,\n  \n  // Prediction\n  predicted_outcome: leadData.lead_type,\n  hunter_status: hubspotProps.hunter_status || 'unknown',\n  \n  // Dates\n  deal_created_at: new Date().toISOString(),\n  review_date: new Date(Date.now() + 30*24*60*60*1000).toISOString(),\n  \n  // Status (will be filled by sales rep later)\n  actual_outcome: null,\n  \n  // Tracking\n  workflow_run_id: leadData.workflow_run_id,\n  \n  // Debug info\n  _debug: {\n    lead_type: leadData.lead_type,\n    deal_found: dealId !== null,\n    task_found: taskId !== null,\n    deal_id: dealId,\n    task_id: taskId\n  }\n};\n\nconsole.log('=== PREPARE SALES FEEDBACK RESULT ===');\nconsole.log('Deal ID:', dealId || 'NULL');\nconsole.log('Task ID:', taskId || 'NULL');\nconsole.log('Predicted Outcome:', leadData.lead_type);\n\n\n// Check out Bitrix24\nlet bitrixSuccess = 'NO';\n\ntry {\n  const bitrixUpdate = $('bitrix24.pl CRM Update').first();\n  if (bitrixUpdate) {\n    bitrixSuccess = 'YES (UPDATE)';\n    console.log('✅ Bitrix24 Update successful');\n  }\n} catch (e) {\n  try {\n    const bitrixAdd = $('bitrix24.pl CRM Lead Add').first();\n    if (bitrixAdd) {\n      bitrixSuccess = 'YES (ADD)';\n      console.log('✅ Bitrix24 Add successful');\n    }\n  } catch (e2) {\n    bitrixSuccess = 'NOT EXECUTED';\n    console.log('⚠️ Bitrix24 not executed');\n  }\n}\n\n// ===== Check AIRTABLE =====\ntry {\n  const airtableResult = $('Airtable - Log Lead').first();\n  if (airtableResult && airtableResult.json && airtableResult.json.id) {\n    airtableSuccess = 'YES';\n    console.log('✅ Airtable Log Lead successful, record ID:', airtableResult.json.id);\n  } else {\n    airtableSuccess = 'NO (No record created)';\n    console.log('⚠️ Airtable Log Lead executed but no ID returned');\n  }\n} catch (e) {\n  airtableSuccess = 'NOT EXECUTED';\n  console.log('❌ Airtable Log Lead not found or error:', e.message);\n}\n\n// ===== RETURN DATA =====\nreturn {\n  feedbackData,\n  airtable_success: airtableSuccess,\n  bitrix24_success: bitrixSuccess\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        -48
+      ],
+      "id": "bd301384-4831-4566-a530-ad66c2fee6c4",
+      "name": "Prepare Sales Feedback"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appZWls67J4Z9TzWp",
+          "mode": "list",
+          "cachedResultName": "HubSpot Leads - poprawione przez Claude 1",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblDaf8sJZj2Dq5Fo",
+          "mode": "list",
+          "cachedResultName": "Sales_Feedback",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp/tblDaf8sJZj2Dq5Fo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Deal_ID": "={{ $json.feedbackData.deal_id }}",
+            "Contact_ID": "={{ $json.feedbackData.contact_id }}",
+            "Task_ID": "={{ $json.feedbackData.task_id }}",
+            "Lead_Score": "={{ $json.feedbackData.lead_score }}",
+            "Lead_Score_Manual": "={{ $json.feedbackData.lead_score_manual }}",
+            "Lead_Score_AI": "={{ $json.feedbackData.lead_score_ai }}",
+            "Workflow_Run_ID": "={{ $json.feedbackData.workflow_run_id }}",
+            "Lead_Name": "={{ $json.feedbackData.lead_name }}",
+            "Company": "={{ $json.feedbackData.company }}",
+            "Predicted_Outcome": "={{ $json.feedbackData.predicted_outcome }}",
+            "Hunter_Status": "={{ $json.feedbackData.hunter_status }}",
+            "Deal_Created_At": "={{ $json.feedbackData.deal_created_at }}",
+            "Review_Date": "={{ $json.feedbackData.review_date }}",
+            "Actual_Outcome": "={{ $json.feedbackData.actual_outcome }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Deal_ID",
+              "displayName": "Deal_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Contact_ID",
+              "displayName": "Contact_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Task_ID",
+              "displayName": "Task_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead_Name",
+              "displayName": "Lead_Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead_Score",
+              "displayName": "Lead_Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead_Score_Manual",
+              "displayName": "Lead_Score_Manual",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead_Score_AI",
+              "displayName": "Lead_Score_AI",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Predicted_Outcome",
+              "displayName": "Predicted_Outcome",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Hunter_Status",
+              "displayName": "Hunter_Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Deal_Created_At",
+              "displayName": "Deal_Created_At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Review_Date",
+              "displayName": "Review_Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Actual_Outcome",
+              "displayName": "Actual_Outcome",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Feedback_Type",
+              "displayName": "Feedback_Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Workflow_Run_ID",
+              "displayName": "Workflow_Run_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2448,
+        -48
+      ],
+      "id": "7fdd606b-bbe7-4633-aafa-5f5ca5dad9f2",
+      "name": "Airtable - Create Sales Feedback",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "g4MDpX8gsgbI0n0A",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 8
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2048,
+        -144
+      ],
+      "id": "58ed6bc8-0b94-4b70-9cf6-fb73481f7c80",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appZWls67J4Z9TzWp",
+          "mode": "list",
+          "cachedResultName": "HubSpot Leads - poprawione przez Claude 1",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblSqvXF5tJSEzSPF",
+          "mode": "list",
+          "cachedResultName": "Execution_Summary",
+          "cachedResultUrl": "https://airtable.com/appZWls67J4Z9TzWp/tblSqvXF5tJSEzSPF"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead ID": "={{ $('Prepare Sales Feedback').item.json.feedbackData.contact_id }}",
+            "Score": "={{ $('Prepare Sales Feedback').item.json.feedbackData.lead_score }}",
+            "Airtable success": "={{ $('Prepare Sales Feedback').item.json.airtable_success }}",
+            "Bitrix24 success": "={{ $('Prepare Sales Feedback').item.json.bitrix24_success }}",
+            "Workflow_Run_ID": "={{ $('Prepare Sales Feedback').item.json.feedbackData.workflow_run_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Lead ID",
+              "displayName": "Lead ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Airtable success",
+              "displayName": "Airtable success",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Bitrix24 success",
+              "displayName": "Bitrix24 success",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Workflow_Run_ID",
+              "displayName": "Workflow_Run_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2640,
+        -48
+      ],
+      "id": "637b2fe3-ab01-429c-9898-eb8526c6ec7e",
+      "name": "Airtable - Log Execution Summary",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "g4MDpX8gsgbI0n0A",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Filter Valid Bitrix Leads\n * Remove test leads without NAME/LAST_NAME\n * Match by firstname + lastname\n */\n\nconst bitrixLeads = $json.result || [];\nconst mergeData = $('Merge Contact & Enrichment Data').first().json;\n\nconsole.log('=== FILTERING BITRIX LEADS ===');\nconsole.log('Total leads from Bitrix:', bitrixLeads.length);\nconsole.log('Target lead:', mergeData.firstname, mergeData.lastname);\n\n// Filter: only leads with NAME and LAST_NAME\nconst validLeads = bitrixLeads.filter(lead => lead.NAME && lead.LAST_NAME);\n\nconsole.log('Valid leads (with name):', validLeads.length);\n\n// Match by firstname + lastname (case-insensitive)\nconst matchingLeads = validLeads.filter(lead => {\n  const nameMatch = (lead.NAME || '').toLowerCase() === (mergeData.firstname || '').toLowerCase();\n  const lastnameMatch = (lead.LAST_NAME || '').toLowerCase() === (mergeData.lastname || '').toLowerCase();\n  \n  if (nameMatch && lastnameMatch) {\n    console.log(`✅ Match found: Lead ${lead.ID} - ${lead.NAME} ${lead.LAST_NAME}`);\n    return true;\n  }\n  return false;\n});\n\nconsole.log('Matching leads:', matchingLeads.length);\n\nreturn {\n  result: matchingLeads,\n  total: matchingLeads.length,\n  _debug: {\n    total_leads: bitrixLeads.length,\n    valid_leads: validLeads.length,\n    matching_leads: matchingLeads.length\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -464
+      ],
+      "id": "0b35917b-2adb-47b7-ae7a-bdd343337f1a",
+      "name": "Filter Valid Leads"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-v153h3.bitrix24.pl/rest/1/ulsbgmkoa85kmaml/crm.lead.add.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"TITLE\": \"{{ $json.firstname }} {{ $json.lastname }} - {{ $json.company }}\",\n    \"NAME\": \"{{ $json.firstname }}\",\n    \"LAST_NAME\": \"{{ $json.lastname }}\",\n    \"COMPANY_TITLE\": \"{{ $json.company }}\",\n    \"POST\": \"{{ $json.jobtitle }}\",\n\n    \"PHONE\": [\n      { \"VALUE\": \"{{ $json.phone }}\", \"VALUE_TYPE\": \"WORK\" }\n    ],\n    \"EMAIL\": [\n      { \"VALUE\": \"{{ $json.email }}\", \"VALUE_TYPE\": \"WORK\" }\n    ],\n\n    \"SOURCE_ID\": \"{{ $json.bitrix_source_id }}\",\n    \"STATUS_ID\": \"{{ $json.bitrix_status_id }}\",\n    \"ASSIGNED_BY_ID\": \"{{ $json.assigned_owner }}\",\n\n    \"COMMENTS\": \"{{ $json.bitrix_comments }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1504,
+        -320
+      ],
+      "id": "d4a3215a-f431-4b2e-9f5d-6a36f80a0fd4",
+      "name": "bitrix24.pl CRM Lead Add",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * Clean emoji & prepare Bitrix24-safe fields\n * Converts data from Merge Data to Bitrix24-compatible format\n */\n\n// Helper function to remove emoji\nfunction stripEmoji(str) {\n  if (!str) return '';\n  return str.replace(/[\\u{1F600}-\\u{1F64F}]/gu, '')\n    .replace(/[\\u{1F300}-\\u{1F5FF}]/gu, '')\n    .replace(/[\\u{1F680}-\\u{1F6FF}]/gu, '')\n    .replace(/[\\u{1F1E0}-\\u{1F1FF}]/gu, '')\n    .replace(/[\\u{2600}-\\u{26FF}]/gu, '')\n    .replace(/[\\u{2700}-\\u{27BF}]/gu, '')\n    .replace(/[\\u{FE00}-\\u{FE0F}]/gu, '')\n    .replace(/[\\u{1F900}-\\u{1F9FF}]/gu, '')\n    .replace(/[\\u{1FA70}-\\u{1FAFF}]/gu, '')\n    .trim();\n}\n\n// ===== GET DATA FROM MERGE DATA =====\nconst leadData = $('Merge Contact & Enrichment Data').first().json;\nconst existingLeadId = $('Filter Valid Leads').first().json.result[0]?.ID || '';\n\nconsole.log('=== CLEAN EMOJI START ===');\nconsole.log('Lead ID:', leadData.id);\nconsole.log('Lead Type:', leadData.lead_type);\nconsole.log('Lead Score:', leadData.lead_score);\n\n// Clean reasons (remove emoji)\nconst reasonsClean = stripEmoji(leadData.lead_score_reasons || '');\n\n// ===== STATUS_ID MAPPING =====\nlet bitrix_status_id = 'NEW';\nif (leadData.lead_type === 'HOT') {\n  bitrix_status_id = 'IN_PROCESS';\n} else if (leadData.lead_type === 'WARM') {\n  bitrix_status_id = 'NEW';\n} else {\n  bitrix_status_id = 'NEW';\n}\n\n// ===== CREATE BITRIX24 COMMENTS =====\nconst bitrix_comments = \n  `Lead score: ${leadData.lead_score || 'N/A'} | ` +\n  `Owner: ${leadData.owner_id || 'N/A'} | ` +\n  `Type: ${leadData.lead_type || 'N/A'} | ` +\n  `Stage: ${leadData.lifecyclestage || 'N/A'} | ` +\n  `Reasons: ${reasonsClean}`;\n\nconsole.log('Comments:', bitrix_comments);\n\n// ===== RETURN CLEANED DATA =====\nreturn {\n  // Contact info\n  firstname: leadData.firstname || '',\n  lastname: leadData.lastname || '',\n  email: leadData.email || '',\n  phone: leadData.phone || '',\n  jobtitle: leadData.jobtitle || '',\n  \n  // Scoring\n  lead_type: leadData.lead_type || 'COLD',\n  lead_score: leadData.lead_score || 0,\n  lifecyclestage: leadData.lifecyclestage || 'lead',\n  \n  // Company\n  company: leadData.company || '',\n  \n  // Bitrix24 specific\n  assigned_owner: leadData.owner_id || '1',\n  bitrix_comments: bitrix_comments,\n  bitrix_source_id: 'WEB',\n  bitrix_status_id: bitrix_status_id,\n  lead_id: existingLeadId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        -480
+      ],
+      "id": "b79d13eb-770f-4efe-bf53-3a9601ba1ce1",
+      "name": "Clean emoji & prepare Bitrix24-safe fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from different sources (with error handling)\n\nlet cleanEmojiData = {};\nlet leadId = 0;\n\n// Try to get from Clean emoji (FALSE path - new lead)\ntry {\n  const node1 = $('Clean emoji & prepare Bitrix24-safe fields');\n  if (node1 && node1.first()) {\n    cleanEmojiData = node1.first().json;\n  }\n} catch (e) {\n  // Node was not in this path\n}\n\n// Try to get from Clean emoji1 (TRUE path - existing lead)\ntry {\n  const node2 = $('Clean emoji & prepare Bitrix24-safe fields1');\n  if (node2 && node2.first() && !cleanEmojiData.firstname) {\n    cleanEmojiData = node2.first().json;\n  }\n} catch (e) {\n  // Node was not in this path\n}\n\n// Get LEAD_ID\ntry {\n  // Path FALSE - new lead\n  const crmAdd = $('bitrix24.pl CRM Lead Add');\n  if (crmAdd && crmAdd.first()) {\n    leadId = crmAdd.first().json.result || 0;\n  }\n} catch (e) {\n  // Try TRUE path - existing lead\n  try {\n    const filterLeads = $('Filter Valid Leads');\n    if (filterLeads && filterLeads.first()) {\n      leadId = filterLeads.first().json.result[0]?.ID || 0;\n    }\n  } catch (e2) {\n    // No ID\n  }\n}\n\nreturn {\n  firstname: cleanEmojiData.firstname || '',\n  lastname: cleanEmojiData.lastname || '',\n  company: cleanEmojiData.company || '',\n  lead_score: cleanEmojiData.lead_score || 0,\n  assigned_owner: cleanEmojiData.assigned_owner || '1',\n  bitrix_comments: cleanEmojiData.bitrix_comments || '',\n  lead_id: leadId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -496
+      ],
+      "id": "af1fe2dd-2b0c-41c7-8bab-6d1568f3b53f",
+      "name": "Prepare Deal Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node: Process Deal Check Response\n\nconst bitrixResponse = $input.first().json;\nconst dealData = $('Prepare Deal Data').first().json;\n\nconst dealExists = bitrixResponse.result && bitrixResponse.result.length > 0;\nconst existingDealId = dealExists ? bitrixResponse.result[0].ID : null;\n\nconsole.log('Deal exists:', dealExists);\nif (dealExists) {\n  console.log('Existing Deal ID:', existingDealId);\n}\n\nreturn {\n  ...dealData,\n  dealExists: dealExists,\n  existingDealId: existingDealId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        -496
+      ],
+      "id": "a1b0cd53-61d0-483d-b20b-936ec6da03c0",
+      "name": "Check if Deal Exists"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-v153h3.bitrix24.pl/rest/1/ulsbgmkoa85kmaml/crm.deal.list.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"SELECT\": [\"ID\", \"TITLE\", \"LEAD_ID\"],\n  \"FILTER\": {\n    \"LEAD_ID\": \"{{ $json.lead_id }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        -496
+      ],
+      "id": "337e62c4-cd6e-4351-ae9e-90944477a9d6",
+      "name": "Check if Deal Exists for Lead",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bddaab6a-d3cf-4e8a-b0c5-6ee768ae14d5",
+              "leftValue": "={{ $json.dealExists }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2272,
+        -496
+      ],
+      "id": "43814a67-2df4-44f2-8bea-881e409c5cc1",
+      "name": "IF deal NOT exists"
+    },
+    {
+      "parameters": {
+        "jsCode": "const originalData = $('Calculate Final Score').first().json;\n\n// Get Company from Hunter Email Finder\nlet company = originalData.company || 'Unknown';\ntry {\n  const hunterData = $('Hunter Email Finder').first().json;\n  if (hunterData.company) {\n    company = hunterData.company;\n  }\n} catch (e) {\n  console.log('Could not get company from Hunter');\n}\n\nreturn {\n  // === WORKFLOW DATA ===\n  id: originalData.id,\n  lead_score: originalData.lead_score,\n  lead_score_reasons: originalData.lead_score_reasons,\n  lead_type: originalData.lead_type,\n  lifecyclestage: originalData.lifecyclestage,\n  owner_id: originalData.owner_id,\n  email: originalData.email,\n  firstname: originalData.firstname,\n  lastname: originalData.lastname,\n  phone: originalData.phone,\n  company: company,\n  jobtitle: originalData.jobtitle,\n  \n  // === NEW FIELDS FOR AIRTABLE ===\n  workflow_run_id: $execution.id,\n  scored_at: new Date().toISOString(),\n  status: 'New',\n  source: 'Website',\n  \n  // HubSpot payload\n  hubspot_payload: originalData.hubspot_payload\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -64
+      ],
+      "id": "43ba4ddc-8b94-44bd-b5f2-4cac6ae76530",
+      "name": "Merge Contact & Enrichment Data"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. FETCHING DATA FROM DIFFERENT SOURCES\nconst techInput = $input.item.json; //Tech stack data from Analyze Tech Stack\n\n// Get contact data from previous nodes\nlet contactData = {};\ntry {\n  contactData = $('Parse Contact Properties').item.json;\n} catch (e) {\n  try {\n    contactData = $('Get a contact').item.json;\n  } catch (e2) {\n    console.log('Could not get contact data from previous nodes');\n  }\n}\n\n// Get ID from Trigger if not available elsewhere\nlet contactId = '';\ntry {\n  contactId = String(\n    contactData.id ||\n    contactData.hs_object_id ||\n    contactData.properties?.hs_object_id?.value ||\n    $('HubSpot Trigger').item.json.contactId ||\n    \"\"\n  );\n} catch (e) {\n  console.log('Could not get contactId');\n}\n\n// Basic data\nconst inputData = {\n  id: contactId,\n  email: contactData.email,\n  firstname: contactData.firstname,\n  lastname: contactData.lastname,\n  jobtitle: contactData.jobtitle,\n  phone: contactData.phone,\n  company: contactData.company,\n  properties: contactData.properties || {}\n};\n\nconst p = inputData.properties;\n\n// Function to fetch data\nconst getData = (name) => {\n  try {\n    const n = $(name).item.json;\n    return n.hunter || n;\n  } catch (e) { return {}; }\n};\n\nconst hunter = getData('Merge Email Verification Data');\nconst tech = techInput; // Tech stack z inputu\n\n// 2. SCORING\nlet score = 0;\nlet reasons = [];\n\n// Basic data - Phone\nconst phone = inputData.phone || p.phone?.value || p.phone;\nif (phone) { \n  score += 20; \n  reasons.push('Phone provided'); \n}\n\n// Job Title\nconst job = inputData.jobtitle || p.jobtitle?.value || p.jobtitle;\nif (job) {\n  if (/CEO|CTO|Owner|Founder|Director|VP|President|Head/i.test(job)) {\n    score += 25; \n    reasons.push('Decision maker role');\n  } else if (/Manager|Lead|Coordinator/i.test(job)) {\n    score += 15; \n    reasons.push('Management role');\n  }\n}\n\n// Hunter Email Verification\nconst hStatus = hunter['verification_status'] || hunter.status;\nif (hStatus === 'valid') { \n  score += 25; \n  reasons.push('Email verified (Hunter)'); \n} else if (hStatus === 'accept_all') { \n  score += 15; \n  reasons.push('Email accept_all (Hunter)'); \n}\n\n// Tech Stack\nconst tScore = tech.tech_score || 0;\nif (tScore > 0) {\n  const profile = tech.tech_profile;\n  if (profile === 'enterprise') { \n    score += 30; \n    reasons.push(`Enterprise Tech Stack (Score: ${tScore})`);\n  } else if (profile === 'growing') { \n    score += 15; \n    reasons.push(`Growing Tech Stack (Score: ${tScore})`);\n  }\n}\n\n// 3. CLASSIFICATION\nlet type = 'COLD', stage = 'lead', owner = null;\nif (score >= 70) { \n  type = 'HOT'; \n  stage = 'salesqualifiedlead'; \n  owner = '86239643'; \n} else if (score >= 40) { \n  type = 'WARM'; \n  stage = 'marketingqualifiedlead'; \n  owner = '31456377'; \n}\n\n// 4. FINAL OUTPUT\nreturn {\n  id: contactId,\n  lead_score: score,\n  lead_score_reasons: reasons.join(', '),\n  lead_type: type,\n  lifecyclestage: stage,\n  owner_id: owner,\n  email: inputData.email || p.email?.value,\n  firstname: inputData.firstname || p.firstname?.value,\n  lastname: inputData.lastname || p.lastname?.value,\n  phone: phone || null,\n  jobtitle: job || null,\n  company: inputData.company || p.company?.value,\n  hubspot_payload: {\n    properties: {\n      lead_score_n8n: String(score),\n      lead_score_reasons_n8n: reasons.join(', '),\n      lifecyclestage: stage,\n      ...(owner ? { hubspot_owner_id: owner } : {}),\n      hunter_status: hStatus || 'unknown'\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -352
+      ],
+      "id": "e65e0044-93be-4274-a88a-bd428c547311",
+      "name": "Calculate Lead Score & Assign Owner"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const props = $json.properties || {};\n\n// Function for safe value retrieval\nfunction getValue(prop) {\n  if (!prop) return null;\n  \n  // Format 1: { value: \"...\", versions: [...] }\n  if (typeof prop === 'object' && prop.value !== undefined) {\n    return prop.value;\n  }\n  \n  // Format 2: direct value (string)\n  if (typeof prop === 'string') {\n    return prop;\n  }\n  \n  return null;\n}\n\nreturn {\n  id: $json.vid || $json.id || null,\n  \n  // Use getValue function for each field\n  email: getValue(props.email),\n  firstname: getValue(props.firstname),\n  lastname: getValue(props.lastname),\n  phone: getValue(props.phone),\n  company: getValue(props.company),\n  jobtitle: getValue(props.jobtitle),\n  \n  // Keep original properties\n  properties: props\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -496
+      ],
+      "id": "229bdbd3-7936-4109-b6bd-9f8350218b6e",
+      "name": "Parse Contact Properties"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Get data from previous node\nconst email = $json.email;\nconst company = $json.company;\n\nlet domain = null;\nlet canLookup = false;\n\n// List of private domains (we do not check them at BuiltWith)\nconst personalDomains = [\n  'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', \n  'aol.com', 'icloud.com', 'mail.com', 'protonmail.com',\n  'wp.pl', 'onet.pl', 'interia.pl', 'o2.pl', 'gazeta.pl',\n  'tlen.pl', 'op.pl', 'poczta.fm'\n];\n\n// Extract domain from email\nif (email && email.includes('@')) {\n  const emailDomain = email.split('@')[1].toLowerCase();\n  \n  // Check if it's not a private domain\n  if (!personalDomains.includes(emailDomain)) {\n    domain = emailDomain;\n    canLookup = true;\n  }\n}\n\n// Pass all data forward + new fields\nreturn {\n  // Original data\n  ...$input.item.json,\n  // New fields for BuiltWith\n  domain: domain,\n  can_lookup_tech: canLookup\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -336
+      ],
+      "id": "fb2d3378-03b7-4863-827e-475dc2ecf3b3",
+      "name": "Extract Domain from Email"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const builtwith = typeof $json.data === 'string' ? JSON.parse($json.data) : $json;\nconst groups = builtwith.groups || [];\n\nlet techScore = 0;\nlet detectedGroups = [];\n\nfor (const g of groups) {\nif (g.live > 0) {\ntechScore += 10;\ndetectedGroups.push(`${g.name} (${g.live})`);\n} else if (g.dead > 0) {\ntechScore += 3;\n}\n}\n\nconst techProfile =\ntechScore >= 60 ? 'enterprise'\n: techScore >= 30 ? 'growing'\n: techScore >= 10 ? 'standard'\n: 'basic';\n\nreturn {\n...$json, // Keep original data\ntech_score: techScore,\ntech_profile: techProfile,\ntech_groups: detectedGroups.length > 0 ? detectedGroups.join(', ') : 'no_tech_detected',\ntech_groups_count: detectedGroups.length\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -352
+      ],
+      "id": "84d1707a-2cde-41ff-bb1e-d0716a443982",
+      "name": "Calculate Tech Stack Score"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from previous nodes\nconst contactData = $('Parse Contact Properties').first().json;\nconst hunterFinderData = $('Hunter Email Finder').first().json;\nconst hunterVerifierData = $input.first().json; // Hunter Email Verifier\n\n// Combine all data\nreturn {\n  // Original contact details\n  ...contactData,\n  \n  // Add data from Hunter\n  hunter: {\n    email_found: hunterFinderData.email,\n    email_score: hunterFinderData.score,\n    verification_status: hunterVerifierData.status,\n    verification_score: hunterVerifierData.score,\n    is_webmail: hunterVerifierData.webmail,\n    is_disposable: hunterVerifierData.disposable,\n    accept_all: hunterVerifierData.accept_all,\n    mx_records: hunterVerifierData.mx_records,\n    smtp_check: hunterVerifierData.smtp_check,\n    risk_level: hunterVerifierData.result // \"deliverable\", \"risky\", \"undeliverable\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -496
+      ],
+      "id": "07907a1c-02ef-4a19-ba3b-129f163fb16f",
+      "name": "Merge Email Verification Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get both scores\nconst manualScoring = $('Calculate Lead Score & Assign Owner').first().json;\nconst aiResponse = $input.first().json; // Already parsed JSON from AI\n\n// 1. SCORING STRATEGIES - choose one:\n\n// ===== STRATEGIA A: Weighted Average  =====\nconst MANUAL_WEIGHT = 0.4;  // 40% manual\nconst AI_WEIGHT = 0.6;      // 60% AI (give it more weight)\n\nconst finalScore = Math.round(\n  (manualScoring.lead_score * MANUAL_WEIGHT) + \n  (aiResponse.ai_score * AI_WEIGHT)\n);\n\n// 2. RE-CLASSIFICATION based on combined score\nlet leadType, lifecycleStage, ownerId = null;\n\nif (finalScore >= 70) {\n  leadType = 'HOT';\n  lifecycleStage = 'salesqualifiedlead';\n  ownerId = '86239643'; // Senior sales rep\n} else if (finalScore >= 40) {\n  leadType = 'WARM';\n  lifecycleStage = 'marketingqualifiedlead';\n  ownerId = '31456377'; // Junior sales rep\n} else {\n  leadType = 'COLD';\n  lifecycleStage = 'lead';\n  ownerId = null; // Nurture campaign\n}\n\n// 3. COMBINE REASONS (manual + AI)\nconst combinedReasons = [\n  `Manual: ${manualScoring.lead_score_reasons}`,\n  `AI: ${aiResponse.reasoning}`,\n  ...(aiResponse.red_flags.length > 0 ? [`🚩 ${aiResponse.red_flags.join(', ')}`] : []),\n  ...(aiResponse.opportunities.length > 0 ? [`✅ ${aiResponse.opportunities.join(', ')}`] : [])\n].join(' | ');\n\n// 4. FINAL OUTPUT\nreturn {\n  json: {\n    // Original data\n    id: manualScoring.id,\n    email: manualScoring.email,\n    firstname: manualScoring.firstname,\n    lastname: manualScoring.lastname,\n    phone: manualScoring.phone,\n    jobtitle: manualScoring.jobtitle,\n    company: manualScoring.company,\n    \n    // Scoring breakdown\n    lead_score: finalScore,\n    manual_score: manualScoring.lead_score,\n    ai_score: aiResponse.ai_score,\n    final_score: finalScore,\n    score_method: 'weighted_average_40_60',\n    \n    // Classification\n    lead_type: leadType,\n    lifecyclestage: lifecycleStage,\n    owner_id: ownerId,\n    \n    // Insights\n    lead_score_reasons: combinedReasons,\n    ai_reasoning: aiResponse.reasoning,\n    red_flags: aiResponse.red_flags,\n    opportunities: aiResponse.opportunities,\n    recommended_action: aiResponse.recommended_action,\n    \n    // Metadata\n    scored_at: new Date().toISOString(),\n    scoring_version: 'v2_ai_enhanced',\n    \n    // HubSpot payload\n    hubspot_payload: {\n      properties: {\n        lead_score_n8n: String(finalScore),\n        lead_score_manual: String(manualScoring.lead_score),\n        lead_score_ai: String(aiResponse.ai_score),\n        lead_score_reasons_n8n: combinedReasons.substring(0, 5000), // HubSpot limit\n        ai_recommended_action: aiResponse.recommended_action || '',\n        lifecyclestage: lifecycleStage,\n        ...(ownerId ? { hubspot_owner_id: ownerId } : {}),\n        hunter_status: manualScoring.hubspot_payload?.properties?.hunter_status || 'unknown'\n      }\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -64
+      ],
+      "id": "2f8b1b30-a6b4-49b5-8a06-fdde6f0e8478",
+      "name": "Calculate Final Score"
+    },
+    {
+      "parameters": {
+        "content": "## Data Enrichment\n\n**Hunter.io:** Email verification + company data\n**BuiltWith:** Tech stack analysis (273 technologies tracked)\n\n→ Enriched data flows to dual scoring syste",
+        "height": 384,
+        "width": 704
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        -736
+      ],
+      "typeVersion": 1,
+      "id": "6ad8c8b9-6986-4636-a0c3-3fa9c83eb083",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Dual Scoring System\n**Manual Score:** Phone, job title, tech stack, email quality\n**AI Score:** AI Score: Groq Llama 3.3 70B analyzes all data + context\n\n\n\n\n\n\n\n\n\n\n**Final Score:** Weighted average (Manual + AI)\n**Classification:** HOT (70+) | WARM (40-69) | COLD (<40)\n",
+        "height": 272,
+        "width": 400,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "490d3192-ea1d-4fd4-b11d-cee3b221c4b0",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Bitrix24 Integration\n\n**Lead Management:**\n1. Check if lead exists (EMAIL match)\n2. Clean emoji & prepare data\n3. Update existing OR Create new lead",
+        "height": 576,
+        "width": 336,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        928,
+        -736
+      ],
+      "typeVersion": 1,
+      "id": "0d1a598e-5c0a-43d7-bb65-9c3f03b14532",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n**Flow:** HubSpot → Enrich → Score (Manual + AI) → Assign Owner → Route by Type\n\n**Outputs:**\n- HOT leads (70+) → Slack + Bitrix24 Deal + Activity\n- WARM leads (40-69) → Task\n- COLD leads (<40) → Task\n\n**Tracking:** Complete audit trail in Airtable + ML feedback loop\n\n\n\n\n\n\n\n\n\n\n**All lead types get tasks:**\n- HOT: \"Follow up within 1 hour\" (High Priority)\n- WARM: \"Reach out within 24h\" (Medium Priority)\n- COLD: \"Nurture campaign\" (Low Priority)\n\nTask includes: Score, reasons, recommended action",
+        "height": 352,
+        "width": 1136,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "eff751f7-d22a-4a3a-89d4-ac7dbd543b62",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Airtable Analytics\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n**Tables:**\n- Leads: All processed contacts\n- Scoring_History: Score breakdown per lead\n- Sales_Feedback: Deal outcomes\n- Execution_Summary: Workflow runs\n\n**ML Loop:** Predicted vs Actual outcome tracking",
+        "height": 400,
+        "width": 608,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2192,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "a06a0c76-2ea0-4ef9-8c18-86e1e8ab54e8",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "**For HOT Leads Only:**\n1. Prepare deal data\n2. Check if deal exists (LEAD_ID)\n3. Create Deal (with bidirectional links)\n4. Create Activity for Lead (→ Deal ref)\n5. Create Activity for Deal (→ Lead ref)\n\n**Linking:**\n- Deal → Lead (LEAD_ID + custom field)\n- Activities cross-reference both entities",
+        "height": 576,
+        "width": 1536,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1264,
+        -736
+      ],
+      "typeVersion": 1,
+      "id": "48a40066-3c04-4b17-bda2-960c2e09bd04",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 192,
+        "width": 688,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "67b009cc-5969-4a05-a257-f50b213a1a98",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 272,
+        "width": 192,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        928,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "747ff30f-b67c-4a94-a401-a43ec2f87f0b",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Owner Assignment\n\n\n\n\n\n\n\n**Rules:**\n- Score 80+ → Owner ID: 86239643\n- Score 60-79 → Owner ID: 31456377\n- Score <60 → Owner ID: 31456377 (default)\n\nBased on lead quality & team capacity",
+        "height": 352,
+        "width": 256,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "9f306633-9c15-485f-9374-30f5e32078ab",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 192,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        48,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "9714d4a0-8643-4748-8c08-fdf287e86d2b",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 192,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "cd92249e-fb9a-4248-a36c-ec58a377ad6b",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "## Automated Lead Scoring & Assignment\n\n**Flow:** HubSpot → Enrich → Score (Manual + AI) → Assign Owner → Route by Type\n\n**Outputs:**\n- HOT leads (70+) → Slack + Bitrix24 Deal + Activity\n- WARM leads (40-69) → Task\n- COLD leads (<40) → Task\n\n**Tracking:** Complete audit trail in Airtable + ML feedback loop",
+        "height": 384,
+        "width": 592,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        -736
+      ],
+      "typeVersion": 1,
+      "id": "cc006430-2eec-4887-9504-094e35fd217a",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 176,
+        "width": 150,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "318aa687-747b-4576-9729-9958b24de948",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "## Automated Lead Scoring & Assignment",
+        "height": 272,
+        "width": 566,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        48,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "2c0d8079-75b0-437e-a6af-766c5cbe6bef",
+      "name": "Sticky Note17"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 192,
+        "width": 166,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -112,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "6dbda3a1-259e-46c1-92fa-7b8887307d93",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 400,
+        "width": 214,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1984,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "88774f03-93f1-4b1f-9c93-37c96be9f7ae",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 272,
+        "width": 150,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        608,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "cf8a40f6-4e47-4a5c-bf09-62f2d856defe",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## HubSpot Task Creation",
+        "height": 80,
+        "width": 288,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "f7655490-97e6-4b6c-b42f-70bc48f9fd52",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 272,
+        "width": 198,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "3ef000c3-6ee1-4555-990d-e2ef844380a3",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "## Dual Scoring System",
+        "height": 272,
+        "width": 464,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1120,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "a26f0488-1908-457b-8546-b3e86006d5a6",
+      "name": "Sticky Note21"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -272
+      ],
+      "id": "6b812eb2-ded5-41f8-966d-80eaa6124127",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "hsltzUFSYRibxBnf",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0a050cb-75f5-4392-90c8-b018bc7feb3b",
+              "leftValue": "={{ $json.result && $json.result.length > 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "31cacc93-789d-4906-af05-ba9236111d44",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        -464
+      ],
+      "id": "b989d3b1-1e3e-4815-a5d1-6194688d59ac",
+      "name": "IF the lead exist"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "get",
+        "contactId": {
+          "__rl": true,
+          "value": "={{ $json.contactId }}",
+          "mode": "id"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        -496
+      ],
+      "id": "733186ef-1c8e-438a-8184-6780f903c45f",
+      "name": "Get a contact",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "deal",
+        "stage": "presentationscheduled",
+        "additionalFields": {
+          "associatedVids": "={{ $('Merge Contact & Enrichment Data').item.json.id }}",
+          "closeDate": "={{ new Date(Date.now() + 14*24*60*60*1000).toISOString().split('T')[0] }}",
+          "description": "==== LEAD SCORING DATA ===\nScore: {{ $('Merge Contact & Enrichment Data').item.json.lead_score }} (Manual: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_manual }}, AI: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_ai }})\nPredicted: {{ $('Merge Contact & Enrichment Data').item.json.lead_type }}\nHunter Status: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.hunter_status }}\nCompany: {{ $('Merge Contact & Enrichment Data').item.json.company }}\nTitle: {{ $('Merge Contact & Enrichment Data').item.json.jobtitle }}\nCreated: {{ $('Merge Contact & Enrichment Data').item.json.scored_at }}\nWorkflow: {{ $('Merge Contact & Enrichment Data').item.json.workflow_run_id }}\n\n=== AI RECOMMENDATION ===\n{{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.ai_recommended_action }}",
+          "dealName": "={{ $('Merge Contact & Enrichment Data').item.json.firstname }}{{ $('Merge Contact & Enrichment Data').item.json.lastname }} – Inbound Lead ({{ $('Merge Contact & Enrichment Data').item.json.lead_type }})",
+          "dealOwner": {
+            "__rl": true,
+            "value": "={{ $('Merge Contact & Enrichment Data').item.json.owner_id }}",
+            "mode": "id"
+          },
+          "dealType": "newbusiness",
+          "pipeline": "default"
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        128
+      ],
+      "id": "db766838-c359-466e-ae1f-484527716029",
+      "name": "Create a deal.",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7bff9219-878d-4222-91d8-5f01a0639856",
+              "leftValue": "={{ $('Clean emoji & prepare Bitrix24-safe fields').item.json.lead_type }}",
+              "rightValue": "HOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1664,
+        -320
+      ],
+      "id": "16e6e645-ced9-4f35-8a02-a1b26fc98d36",
+      "name": "IF HOT LEAD."
+    },
+    {
+      "parameters": {
+        "eventsUi": {
+          "eventValues": [
+            {}
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.hubspotTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -496
+      ],
+      "id": "28cdc41a-58c3-4866-b216-fa912b83685b",
+      "name": "HubSpot Trigger",
+      "webhookId": "c7930b58-ecb2-41a1-bbcb-8c103f63dea8",
+      "credentials": {
+        "hubspotDeveloperApi": {
+          "id": "q5DyH6yoF3iuR3s2",
+          "name": "HubSpot Developer n8n-priv-app"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-v153h3.bitrix24.pl/rest/1/ulsbgmkoa85kmaml/crm.activity.todo.add.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ownerTypeId\": 1,\n  \"ownerId\": {{ $('Prepare Deal Data').item.json.lead_id }},\n  \"title\": \"Follow-up Lead: {{ $('Prepare Deal Data').item.json.firstname }} {{ $('Prepare Deal Data').item.json.lastname }} - {{ $('Prepare Deal Data').item.json.company }}\",\n  \"description\": \"{{ $('Prepare Deal Data').item.json.bitrix_comments }} Related Deal: {{ $('bitrix24.pl CRM Deal Add').item.json.result }}\",\n  \"deadline\": \"{{ $now.plus({days: 7}).toISO() }}\",\n  \"responsibleId\": {{ $('Prepare Deal Data').item.json.assigned_owner }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2656,
+        -512
+      ],
+      "id": "562ec35d-c245-401c-a50f-a7716f86a138",
+      "name": "Create Activity for Lead"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://b24-v153h3.bitrix24.pl/rest/1/ulsbgmkoa85kmaml/crm.activity.todo.add.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ownerTypeId\": 2,\n  \"ownerId\": {{ $('bitrix24.pl CRM Deal Add').item.json.result }},\n  \"title\": \"Follow-up Deal: {{ $('Prepare Deal Data').item.json.firstname }} {{ $('Prepare Deal Data').item.json.lastname }} - {{ $('Prepare Deal Data').item.json.company }}\",\n  \"description\": \"{{ $('Prepare Deal Data').item.json.bitrix_comments }} Related Lead ID: {{ $('Prepare Deal Data').item.json.lead_id }}\",\n  \"deadline\": \"{{ $now.plus({days: 7}).toISO() }}\",\n  \"responsibleId\": {{ $('Prepare Deal Data').item.json.assigned_owner }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2560,
+        -352
+      ],
+      "id": "d53b3351-17d1-4e53-919a-40ad75de12c6",
+      "name": "Create Activity for Deal"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "engagement",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "body": "=HOT LEAD - HIGH PRIORITY \n\nLead: {{ $('Merge Contact & Enrichment Data').item.json.firstname }} {{ $('Merge Contact & Enrichment Data').item.json.lastname }}\nCompany: {{ $('Merge Contact & Enrichment Data').item.json.company }}\nEmail: {{ $('Merge Contact & Enrichment Data').item.json.email }}\nPhone: {{ $('Merge Contact & Enrichment Data').item.json.phone }}\n\nScore: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_n8n }} (Manual: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_manual }}, AI: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_ai }})\n\nACTION ITEMS:\n1. Call within 1 hour\n2. Personalize pitch based on tech stack\n3. Reference: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_reasons_n8n }}\n\nTask created: {{ new Date().toISOString() }}",
+          "forObjectType": "CONTACT",
+          "status": "NOT_STARTED",
+          "subject": "Follow up with HOT lead"
+        },
+        "additionalFields": {
+          "associations": {
+            "contactIds": "={{ $('HubSpot Trigger').item.json.contactId }}",
+            "ownerId": "={{ $('Merge Contact & Enrichment Data').item.json.owner_id }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        320
+      ],
+      "id": "dc7eb1d5-c282-4435-af79-bbd2cd17ad6d",
+      "name": "Create a task HOT",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "engagement",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "body": "=WARM LEAD - NURTURE & QUALIFY\n\nLead: {{ $('Merge Contact & Enrichment Data').item.json.firstname }} {{ $('Merge Contact & Enrichment Data').item.json.lastname }}\nCompany: {{ $('Merge Contact & Enrichment Data').item.json.company }}\nEmail: {{ $('Merge Contact & Enrichment Data').item.json.email }}\n\nScore: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_n8n }}\n\nNEXT STEPS:\n1. Send personalized email\n2. Provide relevant case study\n3. Schedule discovery call\n\nContext:\n{{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_reasons_n8n }}\n\nFollow up by: {{ new Date(Date.now() + 2*24*60*60*1000).toISOString().split('T')[0] }}",
+          "forObjectType": "CONTACT",
+          "status": "NOT_STARTED",
+          "subject": "Follow up with WARM lead"
+        },
+        "additionalFields": {
+          "associations": {
+            "contactIds": "={{ $('HubSpot Trigger').item.json.contactId }}",
+            "ownerId": "={{ $('Merge Contact & Enrichment Data').item.json.owner_id }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        128
+      ],
+      "id": "670734fc-c5a3-4d98-9b3f-b5ab139f1884",
+      "name": "Create a task WARM",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "engagement",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "body": "=COLD LEAD - ADD TO NURTURE SEQUENCE\n\nLead: {{ $('Merge Contact & Enrichment Data').item.json.firstname }} {{ $('Merge Contact & Enrichment Data').item.json.lastname }}\nEmail: {{ $('Merge Contact & Enrichment Data').item.json.email }}\n\nScore: {{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_n8n }}\n\nACTION:\n- Enroll in nurture sequence\n- Monitor engagement over 30 days\n- Re-score based on activity\n\nCurrent status:\n{{ $('Merge Contact & Enrichment Data').item.json.hubspot_payload.properties.lead_score_reasons_n8n }}",
+          "forObjectType": "CONTACT",
+          "status": "NOT_STARTED",
+          "subject": "Follow up with COLD lead"
+        },
+        "additionalFields": {
+          "associations": {
+            "contactIds": "={{ $('HubSpot Trigger').item.json.contactId }}",
+            "ownerId": "={{ $('Merge Contact & Enrichment Data').item.json.owner_id }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        320
+      ],
+      "id": "76891038-66ac-441e-bee7-98c54c5b658d",
+      "name": "Create a task COLD",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "LcX0nWk8Z9rNp1WC",
+          "name": "HubSpot n8n-node"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If hot": {
+      "main": [
+        [
+          {
+            "node": "Create a task HOT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If warm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If warm": {
+      "main": [
+        [
+          {
+            "node": "Create a task WARM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a task COLD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saving scoring in HubSpot": {
+      "main": [
+        [
+          {
+            "node": "If hot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Search contacts": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicate Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicate Contact": {
+      "main": [
+        [
+          {
+            "node": "Check If is Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a contact": {
+      "main": [
+        [
+          {
+            "node": "Merge Contact & Enrichment Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If can_lookup_tech": {
+      "main": [
+        [
+          {
+            "node": "BuiltWith API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuiltWith API": {
+      "main": [
+        [
+          {
+            "node": "Calculate Tech Stack Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter Email Finder": {
+      "main": [
+        [
+          {
+            "node": "Hunter Email Verifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter Email Verifier": {
+      "main": [
+        [
+          {
+            "node": "Merge Email Verification Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Scoring": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Calculate Final Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get HubSpot Owners": {
+      "main": [
+        [
+          {
+            "node": "Saving scoring in HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If is Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Merge Contact & Enrichment Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create or update a contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Log Lead": {
+      "main": [
+        [
+          {
+            "node": "Prepare Scoring History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Scoring History": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Log Scoring History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Log Scoring History": {
+      "main": [
+        []
+      ]
+    },
+    "Clean emoji & prepare Bitrix24-safe fields": {
+      "main": [
+        [
+          {
+            "node": "bitrix24.pl CRM Lead Add",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bitrix24 CHECK (crm.lead.list)": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF HOT LEAD": {
+      "main": [
+        [
+          {
+            "node": "Prepare Deal Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "bitrix24.pl CRM Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bitrix24.pl CRM Deal Add": {
+      "main": [
+        [
+          {
+            "node": "Create Activity for Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a deal": {
+      "main": [
+        []
+      ]
+    },
+    "Prepare Sales Feedback": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Create Sales Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sales Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable - Create Sales Feedback": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Log Execution Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bitrix24.pl CRM Update": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Leads": {
+      "main": [
+        [
+          {
+            "node": "IF the lead exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bitrix24.pl CRM Lead Add": {
+      "main": [
+        [
+          {
+            "node": "IF HOT LEAD.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean emoji & prepare Bitrix24-safe fields1": {
+      "main": [
+        [
+          {
+            "node": "IF HOT LEAD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Deal Data": {
+      "main": [
+        [
+          {
+            "node": "Check if Deal Exists for Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Deal Exists": {
+      "main": [
+        [
+          {
+            "node": "IF deal NOT exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Deal Exists for Lead": {
+      "main": [
+        [
+          {
+            "node": "Check if Deal Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF deal NOT exists": {
+      "main": [
+        [
+          {
+            "node": "bitrix24.pl CRM Deal Add",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Merge Contact & Enrichment Data": {
+      "main": [
+        [
+          {
+            "node": "Get HubSpot Owners",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Airtable - Log Lead",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "bitrix24 CHECK (crm.lead.list)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Lead Score & Assign Owner": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Contact Properties": {
+      "main": [
+        [
+          {
+            "node": "Hunter Email Finder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Domain from Email": {
+      "main": [
+        [
+          {
+            "node": "If can_lookup_tech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Tech Stack Score": {
+      "main": [
+        [
+          {
+            "node": "Calculate Lead Score & Assign Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Email Verification Data": {
+      "main": [
+        [
+          {
+            "node": "Extract Domain from Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Final Score": {
+      "main": [
+        [
+          {
+            "node": "Search contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Lead Scoring",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF the lead exist": {
+      "main": [
+        [
+          {
+            "node": "Clean emoji & prepare Bitrix24-safe fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clean emoji & prepare Bitrix24-safe fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a contact": {
+      "main": [
+        [
+          {
+            "node": "Parse Contact Properties",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a deal.": {
+      "main": [
+        []
+      ]
+    },
+    "IF HOT LEAD.": {
+      "main": [
+        [
+          {
+            "node": "Prepare Deal Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HubSpot Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Activity for Lead": {
+      "main": [
+        [
+          {
+            "node": "Create Activity for Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Activity for Deal": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Create a task HOT": {
+      "main": [
+        [
+          {
+            "node": "Create a deal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Create a task WARM": {
+      "main": [
+        [
+          {
+            "node": "Create a deal.",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Create a task COLD": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3ae8666b-d927-4e29-968a-d83bd7ada801",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4de8a13b1a92f934a2c777a93d52eceb8549afda747f6c680f227b748b6c36da"
+  },
+  "id": "bRlxFCBRpVZGmeyD",
+  "tags": []
+}
