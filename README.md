@@ -1149,7 +1149,7 @@ Recall (HOT) = A / (A + B + C)
 ## Screenshots
 
 ### Workflow Overview
-![Workflow](./assets/workflow2.png)
+![Workflow](./assets/workflow.png)
 
 ### Bitrix24 Integration
 ![Bitrix24 Lead & Deal](./assets/bitrix24-CRM-add-lead&deal.png)
